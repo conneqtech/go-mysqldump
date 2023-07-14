@@ -1,4 +1,4 @@
-FROM mysql:8
+FROM mysql:8-debian
 RUN apt-get update && apt-get install -y time
 
 COPY go_mysqldump_linux /bin/go_mysqldump

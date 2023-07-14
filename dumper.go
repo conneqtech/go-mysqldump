@@ -32,7 +32,12 @@ var filteredTables = map[string]map[string][]string{
 		"rate_limit_request_log": {}, // skip all data
 	},
 	"paztir_prod": {
-		"migration_versions": {},
+		"doctrine_migration_versions": {},
+	},
+	"paztir": {
+		"doctrine_migration_versions": {},
+		//"event_log":                   {},
+		//"app_log": {" where id = 10027821"},
 	},
 }
 
@@ -128,9 +133,9 @@ func (d *Dumper) getTables(dbName string) ([]string, error) {
 	tables := make([]string, 0)
 
 	// Get table list
-	q := "SHOW TABLES"
+	q := "SHOW TABLES where Tables_in_mygpstracker not like 'gs_tracker_data%';"
 	if d.isPQ() {
-		q = "SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE';"
+		q = "SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE' ORDER BY table_name;"
 	}
 	rows, err := d.db.Query(q)
 	if err != nil {
@@ -246,9 +251,9 @@ func (d *Dumper) writeTableValues(name string, schema string, wg *sync.WaitGroup
 			var rows *sql.Rows
 			var err error
 			if d.chunkSize > 0 {
-				q := "SELECT * FROM " + name + filter + " LIMIT ? OFFSET ?"
+				q := "SELECT * FROM " + name + filter + " ORDER BY 1 LIMIT ? OFFSET ?"
 				if d.isPQ() {
-					q = "SELECT * FROM " + name + filter + " LIMIT $1 OFFSET $2"
+					q = "SELECT * FROM " + name + filter + " ORDER BY 1 LIMIT $1 OFFSET $2"
 				}
 				logrus.Debugf(q, d.chunkSize, offset)
 				rows, err = d.db.Query(q, d.chunkSize, offset)
